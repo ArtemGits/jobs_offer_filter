@@ -1,14 +1,10 @@
-defmodule Task3 do
+defmodule Task1 do
   @moduledoc """
-  Task3 keeps the contexts that define your domain
-  and business logic.
-
-  Contexts are also responsible for managing your data, regardless
-  if it comes from the database, an external API or others.
+  Documentation for `Task1`.
   """
 
   require Logger
-  @priv_dir :code.priv_dir(:task_3)
+  @priv_dir :code.priv_dir(:task_1)
 
   defp set_professions(professions_path) do
     try do
@@ -29,7 +25,7 @@ defmodule Task3 do
     end
   end
 
-  defp group_by_continent(row, acc, professions) do
+  defp group_by_continent(row, acc, professions, continents) do
     try do
       %{
         "profession_id" => id,
@@ -42,7 +38,7 @@ defmodule Task3 do
       lat = String.to_float(latitude)
       lon = String.to_float(longtitude)
 
-      case find_continent(lat, lon) do
+      case find_continent(continents, lat, lon) do
         nil ->
           x = get_from_map(row, professions, id)
           Map.put(acc, "unknown", [x | acc["unknown"]])
@@ -57,14 +53,14 @@ defmodule Task3 do
     end
   end
 
-  defp set_jobs_assoc_professions(jobs_path, res_map, professions) do
+  defp set_jobs_assoc_professions(jobs_path, res_map, professions, continents) do
     try do
       res =
         Path.join(@priv_dir, jobs_path)
         |> File.stream!()
         |> CSV.decode!([{:headers, true}])
         |> Enum.reduce(res_map, fn x, acc ->
-          group_by_continent(x, acc, professions)
+          group_by_continent(x, acc, professions, continents)
         end)
 
       {:ok, res}
@@ -80,12 +76,18 @@ defmodule Task3 do
     end
   end
 
-  def set_grouped_jobs do
-    with {:ok, professions_path} <- Confex.fetch_env(:task_3, :professions_csv),
-         {:ok, jobs_path} <- Confex.fetch_env(:task_3, :jobs_csv),
-         {:ok, res_map} <- Confex.fetch_env(:task_3, :result_map),
-         {:ok, professions} <- set_professions(professions_path) do
-      set_jobs_assoc_professions(jobs_path, res_map, professions)
+  def get_grouped_jobs do
+    j_assoc_p = fn path, res, professions, continents ->
+      set_jobs_assoc_professions(path, res, professions, continents)
+    end
+
+    with {:ok, professions_path} <- Confex.fetch_env(:task_1, :professions_csv),
+         {:ok, jobs_path} <- Confex.fetch_env(:task_1, :jobs_csv),
+         {:ok, res_map} <- Confex.fetch_env(:task_1, :result_map),
+         {:ok, continents} = Confex.fetch_env(:task_1, :continents),
+         {:ok, professions} <- set_professions(professions_path),
+         {:ok, groupped} <- j_assoc_p.(jobs_path, res_map, professions, continents) do
+      count_jobs_per_continent(groupped, continents)
     else
       e ->
         Logger.error("Error through data formation with reason: #{inspect(e)}")
@@ -93,39 +95,7 @@ defmodule Task3 do
     end
   end
 
-  def find_nearest_jobs(map, radius, {lat, lon} = point_b) do
-    {continent, _, _} = find_continent(lat, lon)
-
-    Enum.reduce(map[continent], [], fn x, acc ->
-      point_a = {String.to_float(x["office_latitude"]), String.to_float(x["office_longitude"])}
-
-      distance = calculate_distance(point_a, point_b)
-      build_nearest_jobs_list(x, acc, distance, radius)
-    end)
-  end
-
-  defp build_nearest_jobs_list(element, acc, distance, radius) when distance <= radius do
-    [Map.put(element, "distance", Float.floor(distance, 3)) | acc]
-  end
-
-  defp build_nearest_jobs_list(_element, acc, _distance, _radius), do: acc
-
-  defp calculate_distance(a, b) do
-    {lat_a, lon_a} = a
-    {lat_b, lon_b} = b
-
-    d =
-      (ElixirMath.sin(lat_a) * ElixirMath.sin(lat_b) +
-         ElixirMath.cos(lat_a) * ElixirMath.cos(lat_b) * ElixirMath.cos(lon_a - lon_b))
-      |> ElixirMath.acos()
-
-    r = 6371 # move to config
-    d * r
-  end
-
-  def count_jobs_per_continent(map) do
-    {:ok, continents} = Confex.fetch_env(:task_3, :continents)
-
+  def count_jobs_per_continent(map, continents) do
     Enum.reduce(continents, %{}, fn x, acc ->
       {continent, _, _} = x
 
@@ -167,9 +137,7 @@ defmodule Task3 do
   end
 
   # TODO fixme
-  defp find_continent(lat, lon) do
-    {:ok, continents} = Confex.fetch_env(:task_3, :continents)
-
+  defp find_continent(continents, lat, lon) do
     Enum.find(continents, fn {_, e_lat, e_long} ->
       abs(lat) <= abs(e_lat) and abs(lon) <= abs(e_long)
     end)

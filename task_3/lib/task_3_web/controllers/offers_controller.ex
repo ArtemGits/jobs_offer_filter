@@ -1,0 +1,23 @@
+defmodule Task3Web.OffersController do
+  use Task3Web, :controller
+  require Logger
+
+  def show(conn, params) do
+    %{"lat" => lat_str, "lon" => lon_str, "radius" => radius_str} = params
+    try do
+      point = {String.to_float(lat_str), String.to_float(lon_str)}
+      radius = String.to_integer(radius_str)
+
+      OffersSrv.find_nearest_jobs(point, radius)
+      |> IO.inspect()
+
+      conn
+    rescue
+      e ->
+        Logger.error("Error through parsing controller parameters with reason: #{inspect(e)}")
+        conn |> put_status(400) |> json(%{error: :unexpected_behavior})
+    end
+
+    conn
+  end
+end

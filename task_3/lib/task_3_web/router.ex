@@ -5,7 +5,8 @@ defmodule Task3Web.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/api", Task3Web do
+  scope "/jobs/offers/", Task3Web do
     pipe_through :api
+    get "/filter", OffersController, :show
   end
 end

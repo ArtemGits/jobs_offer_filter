@@ -37,7 +37,10 @@ defmodule Task3.MixProject do
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:csv, "~> 2.4"},
+      {:elixir_math, "~> 0.1.0"},
+      {:confex, "~> 3.4.0"}
     ]
   end
 

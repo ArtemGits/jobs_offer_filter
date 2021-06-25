@@ -7,14 +7,9 @@ defmodule Task3.Application do
 
   def start(_type, _args) do
     children = [
-      # Start the Telemetry supervisor
-      Task3Web.Telemetry,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: Task3.PubSub},
       # Start the Endpoint (http/https)
-      Task3Web.Endpoint
-      # Start a worker by calling: Task3.Worker.start_link(arg)
-      # {Task3.Worker, arg}
+      Task3Web.Endpoint,
+      OffersSrv
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
