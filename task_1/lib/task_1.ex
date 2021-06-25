@@ -136,10 +136,25 @@ defmodule Task1 do
     end
   end
 
-  # TODO fixme
   defp find_continent(continents, lat, lon) do
-    Enum.find(continents, fn {_, e_lat, e_long} ->
-      abs(lat) <= abs(e_lat) and abs(lon) <= abs(e_long)
+    Enum.find(continents, fn {_, c_lat, c_lon} ->
+      compare_latitude(lat, c_lat) and compare_longitude(lon, c_lon)
     end)
+  end
+
+  defp compare_latitude(lat, c_lat) when lat < 0 do
+    lat >= c_lat
+  end
+
+  defp compare_latitude(lat, c_lat) do
+    lat <= c_lat
+  end
+
+  def compare_longitude(lon, c_lon) when lon < 0 do
+    lon >= c_lon
+  end
+
+  def compare_longitude(lon, c_lon) do
+    lon <= c_lon
   end
 end

@@ -29,7 +29,7 @@ defmodule Task3 do
     end
   end
 
-  defp group_by_continent(row, acc, professions) do
+  defp group_by_continent(row, acc, professions, continents) do
     try do
       %{
         "profession_id" => id,
@@ -42,7 +42,7 @@ defmodule Task3 do
       lat = String.to_float(latitude)
       lon = String.to_float(longtitude)
 
-      case find_continent(lat, lon) do
+      case find_continent(continents, lat, lon) do
         nil ->
           x = get_from_map(row, professions, id)
           Map.put(acc, "unknown", [x | acc["unknown"]])
@@ -57,14 +57,14 @@ defmodule Task3 do
     end
   end
 
-  defp set_jobs_assoc_professions(jobs_path, res_map, professions) do
+  defp set_jobs_assoc_professions(jobs_path, res_map, professions, continents) do
     try do
       res =
         Path.join(@priv_dir, jobs_path)
         |> File.stream!()
         |> CSV.decode!([{:headers, true}])
         |> Enum.reduce(res_map, fn x, acc ->
-          group_by_continent(x, acc, professions)
+          group_by_continent(x, acc, professions, continents)
         end)
 
       {:ok, res}
@@ -84,8 +84,9 @@ defmodule Task3 do
     with {:ok, professions_path} <- Confex.fetch_env(:task_3, :professions_csv),
          {:ok, jobs_path} <- Confex.fetch_env(:task_3, :jobs_csv),
          {:ok, res_map} <- Confex.fetch_env(:task_3, :result_map),
+         {:ok, continents} = Confex.fetch_env(:task_3, :continents),
          {:ok, professions} <- set_professions(professions_path) do
-      set_jobs_assoc_professions(jobs_path, res_map, professions)
+      set_jobs_assoc_professions(jobs_path, res_map, professions, continents)
     else
       e ->
         Logger.error("Error through data formation with reason: #{inspect(e)}")
@@ -94,7 +95,10 @@ defmodule Task3 do
   end
 
   def find_nearest_jobs(map, radius, {lat, lon} = point_b) do
-    {continent, _, _} = find_continent(lat, lon)
+    {:ok, continents} = Confex.fetch_env(:task_3, :continents)
+    {continent, _, _} = find_continent(continents, lat, lon)
+
+    IO.inspect(continent)
 
     Enum.reduce(map[continent], [], fn x, acc ->
       point_a = {String.to_float(x["office_latitude"]), String.to_float(x["office_longitude"])}
@@ -119,13 +123,12 @@ defmodule Task3 do
          ElixirMath.cos(lat_a) * ElixirMath.cos(lat_b) * ElixirMath.cos(lon_a - lon_b))
       |> ElixirMath.acos()
 
-    r = 6371 # move to config
+    # move to config
+    r = Confex.get_env(:task_3, :earth_radius)
     d * r
   end
 
-  def count_jobs_per_continent(map) do
-    {:ok, continents} = Confex.fetch_env(:task_3, :continents)
-
+  def count_jobs_per_continent(map, continents) do
     Enum.reduce(continents, %{}, fn x, acc ->
       {continent, _, _} = x
 
@@ -166,12 +169,25 @@ defmodule Task3 do
     end
   end
 
-  # TODO fixme
-  defp find_continent(lat, lon) do
-    {:ok, continents} = Confex.fetch_env(:task_3, :continents)
-
-    Enum.find(continents, fn {_, e_lat, e_long} ->
-      abs(lat) <= abs(e_lat) and abs(lon) <= abs(e_long)
+  defp find_continent(continents, lat, lon) do
+    Enum.find(continents, fn {_, c_lat, c_lon} ->
+      compare_latitude(lat, c_lat) and compare_longitude(lon, c_lon)
     end)
+  end
+
+  defp compare_latitude(lat, c_lat) when lat < 0 do
+    lat >= c_lat
+  end
+
+  defp compare_latitude(lat, c_lat) do
+    lat <= c_lat
+  end
+
+  def compare_longitude(lon, c_lon) when lon < 0 do
+    lon <= c_lon
+  end
+
+  def compare_longitude(lon, c_lon) do
+    lon >= c_lon
   end
 end

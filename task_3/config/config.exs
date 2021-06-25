@@ -43,7 +43,8 @@ config :task_3,
     {"South America", 26, 60},
     {"North America", 48, 108},
     {"Antarctica", 0, 75}
-  ]
+  ],
+  earth_radius: 6371
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

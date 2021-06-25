@@ -3,7 +3,7 @@ defmodule Task1Test do
   doctest Task1
 
   test "jobs count per continent" do
-    Task1.get_grouped_jobs()
-    |> IO.inspect()
+    res = Task1.get_grouped_jobs()
+    assert res["Asia"]["TOTAL"] == 43
   end
 end

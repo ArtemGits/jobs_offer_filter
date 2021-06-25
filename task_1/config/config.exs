@@ -23,9 +23,9 @@ config :task_1,
     {"Europe", 60, 15},
     {"Asia", 53, 103},
     {"Africa", 1, 15},
-    {"Oceania", 18, 160},
-    {"South America", 26, 60},
-    {"North America", 48, 108},
-    {"Antarctica", 0, 75}
+    {"Oceania", -18, 160},
+    {"South America", -26, -60},
+    {"North America", 48, -108},
+    {"Antarctica", -75, 0}
   ]
 
