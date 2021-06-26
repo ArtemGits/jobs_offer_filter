@@ -32,17 +32,15 @@ config :task_3,
     "Africa" => [],
     "Oceania" => [],
     "South America" => [],
-    "North America" => [],
-    "Antarctica" => []
+    "North America" => []
   },
   continents: [
-    {"Europe", 60, 15},
-    {"Asia", 53, 103},
-    {"Africa", 1, 15},
-    {"Oceania", 18, 160},
-    {"South America", 26, 60},
-    {"North America", 48, 108},
-    {"Antarctica", 0, 75}
+    {"Europe", [{-5, 37}, {-7, 75}, {61, 52}, {66, 76}]},
+    {"Asia", [{44, 15},{26, 39},{169, 78},{105, -1}]},
+    {"Africa", [{-17, 35}, {-16, -35}, {45, 32}, {22, 35}]},
+    {"Oceania", [{103, -8}, {106, -43}, {174, -45}, {172, 3}]},
+    {"South America", [{-95, 10}, {-85, -55}, {-102, 8}, {-32, 12}]},
+    {"North America", [{-85, 2},{-171, 63},{-66, 75},{-69, 12}]}
   ],
   earth_radius: 6371
 
