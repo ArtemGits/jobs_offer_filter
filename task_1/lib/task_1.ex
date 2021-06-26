@@ -43,7 +43,7 @@ defmodule Task1 do
           x = get_from_map(row, professions, id)
           Map.put(acc, "unknown", [x | acc["unknown"]])
 
-        {continent, _, _} ->
+        {continent, _} ->
           x = get_from_map(row, professions, id)
           Map.put(acc, continent, [x | acc[continent]])
       end
@@ -97,7 +97,7 @@ defmodule Task1 do
 
   def count_jobs_per_continent(map, continents) do
     Enum.reduce(continents, %{}, fn x, acc ->
-      {continent, _, _} = x
+      {continent, _,} = x
 
       res =
         Enum.reduce(map[continent], %{}, fn x, acc ->
@@ -137,24 +137,23 @@ defmodule Task1 do
   end
 
   defp find_continent(continents, lat, lon) do
-    Enum.find(continents, fn {_, c_lat, c_lon} ->
-      compare_latitude(lat, c_lat) and compare_longitude(lon, c_lon)
+    Enum.find(continents, fn {_, cords} ->
+      [{a_lng, a_lat}, {b_lng, b_lat}, {c_lng, c_lat}, {d_lng, d_lat}] = cords
+
+      {lat_min, lat_max} = Enum.min_max([a_lat, b_lat, c_lat, d_lat])
+      {lon_min, lon_max} = Enum.min_max([a_lng, b_lng, c_lng, d_lng])
+
+      lat_cords = lat_min..lat_max
+      lon_cords = lon_min..lon_max
+
+      case {verify_cords(lat, lat_cords), verify_cords(lon, lon_cords)} do
+        {true, true} -> true
+        _s -> false
+      end
     end)
   end
 
-  defp compare_latitude(lat, c_lat) when lat < 0 do
-    lat >= c_lat
-  end
-
-  defp compare_latitude(lat, c_lat) do
-    lat <= c_lat
-  end
-
-  def compare_longitude(lon, c_lon) when lon < 0 do
-    lon >= c_lon
-  end
-
-  def compare_longitude(lon, c_lon) do
-    lon <= c_lon
+  def verify_cords(c, cords) do
+    ceil(c) in cords
   end
 end
